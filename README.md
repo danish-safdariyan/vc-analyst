@@ -132,15 +132,20 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_DEMO_MODE=false npm run de
 ### DigitalOcean App Platform (recommended for this repo)
 
 - **Spec:** [`.do/app.yaml`](.do/app.yaml) — two services (`api` + `web`) with `source_dir` set to `backend` and `frontend`.
-- **Step-by-step:** [docs/DEPLOY_DIGITALOCEAN.md](docs/DEPLOY_DIGITALOCEAN.md)
 
-The browser calls **same-origin** `/api/...`; Next.js rewrites to your FastAPI URL (`NEXT_PUBLIC_API_URL` at **build** time), so you typically **do not** need extra CORS. Optional: set `CORS_ORIGINS` and `NEXT_PUBLIC_API_DIRECT=true` only if you want the browser to hit the API host directly.
+The browser calls **same-origin** `/api/...`; the Next **App Route** `src/app/api/[...path]/route.ts` proxies to your FastAPI using env (read at **runtime**, so you don’t have to rebuild the frontend when the API URL changes):
 
-Set **`OPENROUTER_API_KEY`** (and optional data keys) as **RUN_TIME** secrets on the API service. Use **`GET /health`** for health checks.
+| Variable | Where | Purpose |
+|----------|--------|--------|
+| **`BACKEND_URL`** | **Web** service (RUN_TIME) | Full origin + optional path prefix, e.g. `https://your-app.ondigitalocean.app/vc-analyst-backend` — **no trailing slash**. |
+| **`NEXT_PUBLIC_API_URL`** | Web (optional) | Same as `BACKEND_URL` if you don’t set `BACKEND_URL`; also used if `NEXT_PUBLIC_API_DIRECT=true`. |
+| **`OPENROUTER_API_KEY`** | **API** service (SECRET) | LLM + agents. |
+
+Set **`CORS_ORIGINS`** on the API only if the browser calls the API host directly (`NEXT_PUBLIC_API_DIRECT=true`).
 
 ### Other hosts (Railway, Render, Fly, Vercel, …)
 
-Same pattern: deploy the API container from `backend/Dockerfile`, deploy the web container from `frontend/Dockerfile` with `NEXT_PUBLIC_API_URL` pointing at the public API URL.
+Deploy the API from `backend/Dockerfile`, the web from `frontend/Dockerfile`, and set **`BACKEND_URL`** on the web container to the API’s public base URL.
 
 ---
 
