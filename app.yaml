@@ -1,8 +1,7 @@
-# DigitalOcean App Platform — App Spec
-# https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+# DigitalOcean App Platform — root app spec (some UI flows only scan this file).
+# Prefer editing .do/app.yaml and keeping this in sync, or delete one copy.
 #
-# Autodetect fails on this repo because package.json / requirements.txt are NOT
-# in the root (monorepo). Use this file instead of "Detect from Source Code".
+# GitHub repo must match YOUR account (replace below).
 
 name: vc-analyst-ai
 region: nyc
