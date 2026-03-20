@@ -1,0 +1,24 @@
+{
+  "dataset_id": "01_devtools_preseed",
+  "version": "1.0",
+  "display_name": "Pre-seed / seed developer tools (US, B2B)",
+  "persona": "Early-stage fund or angel focused on infrastructure and developer productivity.",
+  "use_case": "Screen new deals that match a technical-founder, dev-tools thesis and review memo + drift outputs.",
+  "thesis_raw": "Pre-seed developer tools startups with strong technical founders building B2B products for US engineering teams.",
+  "sample_chat_prompts": [
+    "What should I diligence first for a seed B2B SaaS?",
+    "How do I assess technical moat in a code-review startup?",
+    "What red flags should I look for in dev-tool GTM?"
+  ],
+  "demo_notes": {
+    "mock_mode": "With USE_MOCK=true, full analysis returns the built-in fixture (DevFlow AI, StackPilot, etc.) while displaying this thesis string in the UI.",
+    "live_mode": "With USE_MOCK=false and valid keys, thesis parsing and scoring use OpenRouter; startup discovery uses Crustdata or mock if CRUSTDATA_API_KEY is empty."
+  },
+  "api_smoke_test": {
+    "method": "POST",
+    "path": "/api/parse-thesis",
+    "body": {
+      "thesis": "Pre-seed developer tools startups with strong technical founders building B2B products for US engineering teams."
+    }
+  }
+}

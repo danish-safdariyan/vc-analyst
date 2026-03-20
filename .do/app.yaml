@@ -1,0 +1,61 @@
+# DigitalOcean App Platform — https://docs.digitalocean.com/products/app-platform/reference/app-specification/
+#
+# Before first deploy:
+#   1. Replace YOUR_GITHUB_ORG/YOUR_REPO with your public (or connected) repo.
+#   2. After the API deploys once, confirm NEXT_PUBLIC_API_URL on the web service
+#      matches your API public URL (or use the component reference below).
+#
+# Deploy: App Platform → Create App → GitHub → select repo → "Edit app spec" → paste.
+
+name: vc-analyst-ai
+region: nyc
+
+services:
+  - name: api
+    source_dir: backend
+    github:
+      repo: YOUR_GITHUB_ORG/YOUR_REPO
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: OPENROUTER_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME_IN_DASHBOARD
+      - key: USE_MOCK
+        scope: RUN_TIME
+        value: "false"
+      - key: PORT
+        scope: RUN_TIME
+        value: "8000"
+
+  - name: web
+    source_dir: frontend
+    github:
+      repo: YOUR_GITHUB_ORG/YOUR_REPO
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      # Must be the URL the Next.js server uses to reach the API (HTTPS public URL works).
+      - key: NEXT_PUBLIC_API_URL
+        scope: BUILD_TIME
+        type: GENERAL
+        value: ${api.PUBLIC_URL}
+      - key: NEXT_PUBLIC_DEMO_MODE
+        scope: BUILD_TIME
+        value: "false"

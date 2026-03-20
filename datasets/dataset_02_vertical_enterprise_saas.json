@@ -1,0 +1,24 @@
+{
+  "dataset_id": "02_vertical_enterprise_saas",
+  "version": "1.0",
+  "display_name": "Vertical enterprise SaaS (seed to Series A)",
+  "persona": "Growth or multi-stage fund diligencing regulated or niche B2B software.",
+  "use_case": "Run thesis → discovery → scoring on companies selling into a specific vertical (e.g. construction, logistics).",
+  "thesis_raw": "Seed-stage B2B SaaS selling into construction and built-world verticals; must show pilots with mid-market or enterprise GCs and clear path to $1M ARR.",
+  "sample_chat_prompts": [
+    "What metrics matter most for vertical SaaS at seed?",
+    "How do I think about TAM for niche construction software?",
+    "What questions should I ask a founder about enterprise sales cycles in construction tech?"
+  ],
+  "demo_notes": {
+    "mock_mode": "Pipeline output still uses the shared developer-tools fixture for candidates (deterministic demo data). Your thesis text appears in parsed output raw field and headers.",
+    "live_mode": "Discovery and LLM steps use your thesis content; outputs will reflect vertical SaaS–aligned companies when data APIs return results."
+  },
+  "api_smoke_test": {
+    "method": "POST",
+    "path": "/api/parse-thesis",
+    "body": {
+      "thesis": "Seed-stage B2B SaaS selling into construction and built-world verticals; must show pilots with mid-market or enterprise GCs and clear path to $1M ARR."
+    }
+  }
+}

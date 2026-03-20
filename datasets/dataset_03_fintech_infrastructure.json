@@ -1,0 +1,24 @@
+{
+  "dataset_id": "03_fintech_infrastructure",
+  "version": "1.0",
+  "display_name": "Fintech / payments infrastructure (Series A)",
+  "persona": "Fintech specialist fund evaluating infra and API-first businesses.",
+  "use_case": "Stress-test thesis parsing, startup matching, and the Ask assistant on compliance-heavy, API-led narratives.",
+  "thesis_raw": "Series A fintech infrastructure and embedded payments in the US and Europe; we like API-first platforms with bank or processor partnerships and SOC2 in progress or complete.",
+  "sample_chat_prompts": [
+    "What diligence topics are unique to payments infra vs. lending?",
+    "How should I weigh regulatory risk for a Series A payment orchestration API?",
+    "Draft three diligence questions on unit economics for a usage-based pricing fintech infra startup."
+  ],
+  "demo_notes": {
+    "mock_mode": "Use this thesis on the Thesis page for a quick end-to-end UI walkthrough; mock pipeline returns the same illustrative companies with your thesis text embedded.",
+    "live_mode": "Expect discovery and scoring to emphasize fintech/infra signals when external data and LLM are enabled."
+  },
+  "api_smoke_test": {
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "message": "What diligence topics are unique to payments infra vs. lending?"
+    }
+  }
+}
