@@ -13,6 +13,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Next.js may omit `public/` if unused; Docker COPY still needs the path to exist.
+RUN mkdir -p public
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_DEMO_MODE=false
