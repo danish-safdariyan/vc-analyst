@@ -141,7 +141,7 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_DEMO_MODE=false npm run de
 |----------|--------|
 | **`OPENROUTER_API_KEY`** (SECRET) | LLM + agents on the API process. |
 | **`USE_MOCK`** | `"true"` for fixture-only runs without an LLM key. |
-| **`BACKEND_URL`** | Keep **`http://127.0.0.1:8000`** for this single-container layout (server-side proxy only). |
+| **`BACKEND_URL`** | Optional in the unified image; **`INTERNAL_FASTAPI_URL`** (set in the root [`Dockerfile`](Dockerfile)) forces the Next server to proxy to **`http://127.0.0.1:8000`**. **Never** set **`BACKEND_URL`** to your **public** `https://…ondigitalocean.app` URL here — that sends API calls through the load balancer and can land on a **different** instance than the one that created the job (**404** on poll). |
 | **`NEXT_PUBLIC_DEMO_MODE`** | Build-time; usually `"false"`. |
 
 **Health check:** **`GET /health`** is served by Next.js for the load balancer; the FastAPI **`/health`** is still available internally.

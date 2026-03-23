@@ -24,6 +24,14 @@ export function normalizeBackendOrigin(raw: string): string {
 }
 
 export function backendOriginFromEnv(): string {
+  // Unified Docker / App Platform (Next + FastAPI in one container): the server-side
+  // proxy must call loopback. If BACKEND_URL is set to the public app URL in the DO UI,
+  // requests would go back through the load balancer and hit a *different* instance
+  // than POST /start-analysis — job polling then 404s. INTERNAL_FASTAPI_URL wins.
+  const internal = process.env.INTERNAL_FASTAPI_URL?.trim();
+  if (internal) {
+    return normalizeBackendOrigin(internal);
+  }
   const raw =
     process.env.BACKEND_URL ||
     process.env.API_UPSTREAM ||

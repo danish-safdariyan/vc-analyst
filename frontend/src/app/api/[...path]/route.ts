@@ -24,6 +24,7 @@ async function proxy(req: NextRequest, pathSegments: string[]): Promise<NextResp
     headers,
     redirect: "manual",
     signal: AbortSignal.timeout(PROXY_TIMEOUT_MS),
+    cache: "no-store",
   };
 
   if (req.method !== "GET" && req.method !== "HEAD") {

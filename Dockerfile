@@ -37,6 +37,9 @@ RUN chmod +x /work/entrypoint.sh
 
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
+# Server-side /api proxy target (see frontend/src/lib/backend-origin.ts). Do not remove:
+# overrides mistaken BACKEND_URL=https://your-app.ondigitalocean.app in App Platform UI.
+ENV INTERNAL_FASTAPI_URL=http://127.0.0.1:8000
 ENV BACKEND_URL=http://127.0.0.1:8000
 ENV PYTHONUNBUFFERED=1
 

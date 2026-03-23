@@ -35,6 +35,10 @@ services:
       - key: USE_MOCK
         scope: RUN_TIME
         value: "false"
+      # Next server-side proxy must use loopback (see INTERNAL_FASTAPI_URL in Dockerfile / backend-origin.ts).
+      - key: INTERNAL_FASTAPI_URL
+        scope: RUN_TIME
+        value: "http://127.0.0.1:8000"
       - key: BACKEND_URL
         scope: RUN_TIME
         value: "http://127.0.0.1:8000"
