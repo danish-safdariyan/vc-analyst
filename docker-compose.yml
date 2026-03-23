@@ -1,17 +1,19 @@
-# Local / server: API only. Run the Next.js app separately (npm run dev)
-# so NEXT_PUBLIC_* can point at this service.
+# Full stack in one container (Next on $PORT, FastAPI on 127.0.0.1:8000).
+# Create backend/.env for API keys (see backend/.env.example), then:
 #
 #   docker compose up --build
-#   cd frontend && NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 npm run dev
 #
-# Create backend/.env first (see .env.example).
+# Open http://localhost:3000
 
 services:
-  api:
+  app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      BACKEND_URL: "http://127.0.0.1:8000"
     env_file:
       - ./backend/.env

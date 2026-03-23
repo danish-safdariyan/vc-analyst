@@ -1,0 +1,17 @@
+.git
+.gitignore
+**/.DS_Store
+**/node_modules
+**/.next
+**/__pycache__
+**/.venv
+**/.analysis_jobs
+**/*.pyc
+.mcps
+datasets
+docs
+scripts
+*.md
+.env
+**/.env
+**/.env.*

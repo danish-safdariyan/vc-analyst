@@ -1,8 +1,7 @@
-# DigitalOcean App Platform — App Spec
+# DigitalOcean App Platform — single service (Next.js + FastAPI in one container).
 # https://docs.digitalocean.com/products/app-platform/reference/app-spec/
 #
-# Autodetect fails on this repo because package.json / requirements.txt are NOT
-# in the root (monorepo). Use this file instead of "Detect from Source Code".
+# Build context: repository root (Dockerfile + frontend/ + backend/).
 
 name: vc-analyst-ai
 region: nyc
@@ -11,20 +10,20 @@ alerts:
   - rule: DEPLOYMENT_FAILED
 
 services:
-  - name: api
-    source_dir: backend
+  - name: app
+    source_dir: /
     github:
       repo: danish-safdariyan/vc-analyst
       branch: main
       deploy_on_push: true
     dockerfile_path: Dockerfile
-    # Must match the port uvicorn binds to (Dockerfile: ${PORT:-8000}; DO sets PORT).
-    http_port: 8000
+    # Next.js listens on PORT; default 3000 locally. DO sets PORT — keep http_port in sync.
+    http_port: 3000
     instance_count: 1
     instance_size_slug: basic-xxs
     health_check:
       http_path: /health
-      initial_delay_seconds: 30
+      initial_delay_seconds: 45
       period_seconds: 10
       timeout_seconds: 5
       success_threshold: 1
@@ -36,38 +35,9 @@ services:
       - key: USE_MOCK
         scope: RUN_TIME
         value: "false"
-      # If the API component has a route prefix in the DO console (e.g. /vc-analyst-backend),
-      # set this to match and set web BACKEND_URL to ${api.PUBLIC_URL} including that path.
-      # - key: APP_URL_PREFIX
-      #   scope: RUN_TIME
-      #   value: "/vc-analyst-backend"
-      # If Networking routes /api → this service with path trimmed, enable:
-      # - key: GATEWAY_STRIPS_API_PREFIX
-      #   scope: RUN_TIME
-      #   value: "true"
-
-  - name: web
-    source_dir: frontend
-    github:
-      repo: danish-safdariyan/vc-analyst
-      branch: main
-      deploy_on_push: true
-    dockerfile_path: Dockerfile
-    http_port: 3000
-    instance_count: 1
-    instance_size_slug: basic-xxs
-    envs:
-      # Runtime proxy (see frontend/src/app/api/[...path]/route.ts). If you add a
-      # path-based route for the API, suffix it here (no trailing slash), e.g.
-      # ${api.PUBLIC_URL}/vc-analyst-backend — and set APP_URL_PREFIX on api.
       - key: BACKEND_URL
         scope: RUN_TIME
-        type: GENERAL
-        value: ${api.PUBLIC_URL}
-      - key: NEXT_PUBLIC_API_URL
-        scope: BUILD_TIME
-        type: GENERAL
-        value: ${api.PUBLIC_URL}
+        value: "http://127.0.0.1:8000"
       - key: NEXT_PUBLIC_DEMO_MODE
         scope: BUILD_TIME
         value: "false"

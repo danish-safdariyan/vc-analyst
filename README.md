@@ -92,7 +92,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port ${PORT:-8000}
 ```
 
-On **DigitalOcean App Platform**, the API container must bind to the **`PORT`** env the platform provides (the Dockerfile already uses `uvicorn ... --port ${PORT:-8000}`). Your App Spec **`http_port`** must match that listening port (e.g. `8000`).
+On **DigitalOcean App Platform** with the **root `Dockerfile`**, the **web** process must bind to the **`PORT`** env the platform provides (Next.js `server.js`). Your App Spec **`http_port`** must match that port (e.g. `3000`). If you deploy **only** `backend/Dockerfile`, bind **`uvicorn`** to **`PORT`** (e.g. `8000`) and set **`http_port`** accordingly.
 
 ### 3. Frontend
 
@@ -114,13 +114,15 @@ cd frontend && npm run clean && npm run dev
 
 ## Docker
 
-Run the API in a container (create `backend/.env` first):
+**Full stack (recommended):** one image runs Next.js on **`PORT`** (default 3000) and FastAPI on **127.0.0.1:8000**. Create `backend/.env` first (see `backend/.env.example`), then:
 
 ```bash
 docker compose up --build
 ```
 
-Then start the frontend locally pointed at the API:
+Open **http://localhost:3000**.
+
+**API only** (for local frontend dev): build and run `backend/Dockerfile` from the `backend/` directory, then:
 
 ```bash
 cd frontend
@@ -133,27 +135,22 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_DEMO_MODE=false npm run de
 
 ### DigitalOcean App Platform (recommended for this repo)
 
-- **Spec:** [`.do/app.yaml`](.do/app.yaml) — two services (`api` + `web`) with `source_dir` set to `backend` and `frontend`.
+- **Spec:** [`.do/app.yaml`](.do/app.yaml) — **one** service (`app`) built from the repo root [`Dockerfile`](Dockerfile) (`source_dir: /`). Next.js listens on the platform **`PORT`**; FastAPI runs inside the same container on **127.0.0.1:8000**. The Next route `src/app/api/[...path]/route.ts` proxies `/api/*` to that internal URL via **`BACKEND_URL`** (set to `http://127.0.0.1:8000` in the spec).
 
-The browser calls **same-origin** `/api/...`; the Next **App Route** `src/app/api/[...path]/route.ts` proxies to your FastAPI using env (read at **runtime**, so you don’t have to rebuild the frontend when the API URL changes):
+| Variable | Purpose |
+|----------|--------|
+| **`OPENROUTER_API_KEY`** (SECRET) | LLM + agents on the API process. |
+| **`USE_MOCK`** | `"true"` for fixture-only runs without an LLM key. |
+| **`BACKEND_URL`** | Keep **`http://127.0.0.1:8000`** for this single-container layout (server-side proxy only). |
+| **`NEXT_PUBLIC_DEMO_MODE`** | Build-time; usually `"false"`. |
 
-| Variable | Where | Purpose |
-|----------|--------|--------|
-| **`BACKEND_URL`** | **Web** service (RUN_TIME) | API component base: origin + optional path prefix, e.g. `https://your-app.ondigitalocean.app/vc-analyst-backend` or `${api.PUBLIC_URL}`. **No trailing slash** and **do not** end with `/api` (the app appends `/api/...`). |
-| **`APP_URL_PREFIX`** | **API** service | Must match the component route: e.g. `/vc-analyst-backend` so `/vc-analyst-backend/api/...` is handled. Omit locally. |
-| **`GATEWAY_STRIPS_API_PREFIX`** | **API** service | `true` when DigitalOcean routes `/api` to this service **with path trimmed** (see Networking). Omit locally. |
-| **`NEXT_PUBLIC_API_URL`** | Web (optional) | Same as `BACKEND_URL` if you don’t set `BACKEND_URL`; also used if `NEXT_PUBLIC_API_DIRECT=true`. |
-| **`OPENROUTER_API_KEY`** | **API** service (SECRET) | LLM + agents. |
+**Health check:** **`GET /health`** is served by Next.js for the load balancer; the FastAPI **`/health`** is still available internally.
 
-Set **`CORS_ORIGINS`** on the API only if the browser calls the API host directly (`NEXT_PUBLIC_API_DIRECT=true`).
-
-**DigitalOcean path routing:** If **Networking** sends `/api/*` to the API component with **path trimmed**, the container sees `/start-analysis`, not `/api/start-analysis`. Set **`GATEWAY_STRIPS_API_PREFIX=true`** on the **API** service (see `backend/app/main.py`). In that setup, **`BACKEND_URL` on the web service can be the same origin** as the app (e.g. `https://your-app.ondigitalocean.app`): the edge still routes `/api/...` to FastAPI.
-
-If you **don’t** use trimmed `/api` routing, **`BACKEND_URL`** should be the API component’s own URL (e.g. `${api.PUBLIC_URL}`), not the web-only hostname, or the proxy can call the wrong service. **`NEXT_PUBLIC_*` values must be full URLs** (`https://…`); host-only strings are normalized when possible.
+**Split deploy (two components):** you can still deploy **`backend/Dockerfile`** and **`frontend/Dockerfile`** as separate services. Then set **`BACKEND_URL`** (runtime) on the web service to the API’s public base URL (**no** trailing slash, **not** ending with `/api`). If the API is under a path prefix, set **`APP_URL_PREFIX`** on the API and include that path in **`BACKEND_URL`**. If the gateway strips `/api` before forwarding, set **`GATEWAY_STRIPS_API_PREFIX=true`** on the API (see `backend/app/main.py`). Set **`CORS_ORIGINS`** on the API only if the browser calls the API host directly (`NEXT_PUBLIC_API_DIRECT=true`).
 
 ### Other hosts (Railway, Render, Fly, Vercel, …)
 
-Deploy the API from `backend/Dockerfile`, the web from `frontend/Dockerfile`, and set **`BACKEND_URL`** on the web container to the API’s public base URL.
+Prefer the **root [`Dockerfile`](Dockerfile)** for a single URL. Alternatively, deploy the API from **`backend/Dockerfile`**, the web from **`frontend/Dockerfile`**, and set **`BACKEND_URL`** on the web container to the API’s public base URL.
 
 ---
 
@@ -192,12 +189,14 @@ python scripts/verify_datasets.py --base-url http://127.0.0.1:8000
 ## Project layout
 
 ```
+Dockerfile         Production image: Next + FastAPI (repo root)
+docker/            entrypoint for unified container
 backend/           FastAPI app, agents, job persistence, Dockerfile
-frontend/          Next.js UI
+frontend/          Next.js UI, Dockerfile
 datasets/          Test datasets (JSON) + INDEX
 docs/              Codebook + demonstration guide
 scripts/           verify_datasets.py
-docker-compose.yml API service
+docker-compose.yml Full stack (root Dockerfile)
 ```
 
 ---
