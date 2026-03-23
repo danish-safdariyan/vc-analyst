@@ -21,7 +21,10 @@ services:
     # Must match the port uvicorn binds to (Dockerfile: ${PORT:-8000}; DO sets PORT).
     http_port: 8000
     instance_count: 1
-    instance_size_slug: basic-xxs
+    instance_size_slug: basic-xs
+    storage_mounts:
+      - name: analysis-jobs
+        mount_path: /app/.analysis_jobs
     health_check:
       http_path: /health
       initial_delay_seconds: 30
