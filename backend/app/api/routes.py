@@ -19,6 +19,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi.responses import JSONResponse
 
 from app.agents import (
     memo_generation_agent,
@@ -61,6 +62,9 @@ Do not claim to have private or real-time data; frame opinions as analytical jud
 # Memory is fast; disk survives uvicorn --reload so GET /api/analysis/{id} keeps working.
 _jobs: dict[str, dict[str, Any]] = {}
 
+# Avoid CDN / browser caching poll responses (stale 404s on App Platform, etc.).
+_POLL_HEADERS = {"Cache-Control": "private, no-store, max-age=0", "Pragma": "no-cache"}
+
 
 def _persist_job(job_id: str, status: str, result: Any = None, error: str | None = None) -> None:
     payload: dict[str, Any] = {"status": status, "error": error}
@@ -72,7 +76,7 @@ def _persist_job(job_id: str, status: str, result: Any = None, error: str | None
     try:
         save_job(job_id, payload)
     except (OSError, ValueError) as exc:
-        logger.warning("failed to persist job %s: %s", job_id, exc)
+        logger.error("failed to persist job %s (polls may 404 on other workers/instances): %s", job_id, exc)
 
 
 async def _run_analysis_job(job_id: str, thesis: str) -> None:
@@ -213,11 +217,21 @@ async def get_analysis(job_id: str):
     """
     job = _jobs.get(job_id) or load_job(job_id)
     if job is None:
-        raise HTTPException(status_code=404, detail="job not found")
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "job not found"},
+            headers=_POLL_HEADERS,
+        )
     _jobs[job_id] = job  # warm cache after reload
     if job["status"] == "done":
-        return {"status": "done", "result": job["result"]}
-    return {"status": job["status"], "error": job.get("error")}
+        return JSONResponse(
+            content={"status": "done", "result": job["result"]},
+            headers=_POLL_HEADERS,
+        )
+    return JSONResponse(
+        content={"status": job["status"], "error": job.get("error")},
+        headers=_POLL_HEADERS,
+    )
 
 
 @router.post("/run-analysis", response_model=AnalyzeResponse)

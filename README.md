@@ -146,6 +146,8 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_DEMO_MODE=false npm run de
 
 **Health check:** **`GET /health`** is served by Next.js for the load balancer; the FastAPI **`/health`** is still available internally.
 
+**Async analysis jobs (`POST /api/start-analysis` + polling):** Job state is stored on **local disk** inside the container (default **`/tmp/vc-analysis-jobs`** in the unified Docker image) and **must not** be shared across multiple containers unless you use a shared volume or external store. Keep **`instance_count: 1`** and disable autoscaling for the `app` component, or polls can hit another instance and return **404**. Responses and the Next `/api` proxy set **`Cache-Control: no-store`** so the App Platform CDN does not serve a stale **404** for **`GET /api/analysis/{id}`**.
+
 **Split deploy (two components):** you can still deploy **`backend/Dockerfile`** and **`frontend/Dockerfile`** as separate services. Then set **`BACKEND_URL`** (runtime) on the web service to the API’s public base URL (**no** trailing slash, **not** ending with `/api`). If the API is under a path prefix, set **`APP_URL_PREFIX`** on the API and include that path in **`BACKEND_URL`**. If the gateway strips `/api` before forwarding, set **`GATEWAY_STRIPS_API_PREFIX=true`** on the API (see `backend/app/main.py`). Set **`CORS_ORIGINS`** on the API only if the browser calls the API host directly (`NEXT_PUBLIC_API_DIRECT=true`).
 
 ### Other hosts (Railway, Render, Fly, Vercel, …)

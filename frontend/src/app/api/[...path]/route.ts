@@ -34,6 +34,9 @@ async function proxy(req: NextRequest, pathSegments: string[]): Promise<NextResp
   const res = await fetch(target, init);
 
   const out = new Headers(res.headers);
+  // App Platform / CDN may cache GETs; polling /api/analysis/* must always hit origin.
+  out.set("Cache-Control", "private, no-store, max-age=0");
+  out.set("Pragma", "no-cache");
   return new NextResponse(res.body, {
     status: res.status,
     headers: out,

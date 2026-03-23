@@ -7,14 +7,21 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# backend/.analysis_jobs/{uuid}.json
-_JOBS_DIR = Path(__file__).resolve().parents[2] / ".analysis_jobs"
+
+def _jobs_dir() -> Path:
+    """Writable directory for job JSON. Override with VC_ANALYSIS_JOBS_DIR (e.g. /tmp/... in Docker)."""
+    raw = os.environ.get("VC_ANALYSIS_JOBS_DIR", "").strip()
+    if raw:
+        return Path(raw)
+    # Default: backend/.analysis_jobs/{uuid}.json
+    return Path(__file__).resolve().parents[2] / ".analysis_jobs"
 
 _SAFE_JOB_ID = re.compile(r"^[0-9a-fA-F-]{36}$")
 
@@ -22,13 +29,13 @@ _SAFE_JOB_ID = re.compile(r"^[0-9a-fA-F-]{36}$")
 def _job_path(job_id: str) -> Path:
     if not _SAFE_JOB_ID.match(job_id):
         raise ValueError("invalid job_id")
-    return _JOBS_DIR / f"{job_id}.json"
+    return _jobs_dir() / f"{job_id}.json"
 
 
 def save_job(job_id: str, payload: dict[str, Any]) -> None:
     """Write job state. *payload* must be JSON-serialisable."""
     path = _job_path(job_id)
-    _JOBS_DIR.mkdir(parents=True, exist_ok=True)
+    _jobs_dir().mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
 
