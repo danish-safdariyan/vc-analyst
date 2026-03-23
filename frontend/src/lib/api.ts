@@ -93,9 +93,11 @@ export async function runAnalysis(thesis: string): Promise<VCAnalysisResult> {
     );
     jobId = submit.job_id;
   } catch (err) {
-    // If submit itself fails the backend is truly down — show error
     console.error("[api] failed to submit analysis job", err);
-    throw new Error("Could not reach the backend. Make sure it is running on port 8000.");
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `Could not reach the backend (${detail}). Check BACKEND_URL / NEXT_PUBLIC_API_URL (not localhost in prod), APP_URL_PREFIX on the API if routed under a path, and that the API listens on PORT.`,
+    );
   }
 
   // ── Poll until done (each poll is a tiny GET, immune to long-request suspension) ──

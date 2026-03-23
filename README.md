@@ -89,8 +89,10 @@ python -m venv .venv
 source .venv/bin/activate    # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 # ensure backend/.env exists
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port ${PORT:-8000}
 ```
+
+On **DigitalOcean App Platform**, the API container must bind to the **`PORT`** env the platform provides (the Dockerfile already uses `uvicorn ... --port ${PORT:-8000}`). Your App Spec **`http_port`** must match that listening port (e.g. `8000`).
 
 ### 3. Frontend
 
@@ -137,7 +139,8 @@ The browser calls **same-origin** `/api/...`; the Next **App Route** `src/app/ap
 
 | Variable | Where | Purpose |
 |----------|--------|--------|
-| **`BACKEND_URL`** | **Web** service (RUN_TIME) | Full origin + optional path prefix, e.g. `https://your-app.ondigitalocean.app/vc-analyst-backend` — **no trailing slash**. |
+| **`BACKEND_URL`** | **Web** service (RUN_TIME) | Full origin + route prefix, e.g. `https://your-app.ondigitalocean.app/vc-analyst-backend` — **no trailing slash**. |
+| **`APP_URL_PREFIX`** | **API** service | Must match the component route: e.g. `/vc-analyst-backend` so `/vc-analyst-backend/api/...` is handled. Omit locally. |
 | **`NEXT_PUBLIC_API_URL`** | Web (optional) | Same as `BACKEND_URL` if you don’t set `BACKEND_URL`; also used if `NEXT_PUBLIC_API_DIRECT=true`. |
 | **`OPENROUTER_API_KEY`** | **API** service (SECRET) | LLM + agents. |
 

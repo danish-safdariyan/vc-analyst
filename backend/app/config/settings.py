@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     # directly). Example: https://my-app.ondigitalocean.app
     cors_origins: str = ""
 
+    # Path prefix when the app sits behind a reverse proxy route (DigitalOcean
+    # App Platform component route), e.g. /vc-analyst-backend — no trailing slash.
+    # Leave empty for local dev.
+    app_url_prefix: str = ""
+
     # OpenRouter base URL (OpenAI-compatible)
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 

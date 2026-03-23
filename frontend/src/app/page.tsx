@@ -27,7 +27,10 @@ export default function ThesisPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!thesis.trim()) return;
+    if (!thesis.trim()) {
+      setError("Please enter your fund thesis (or pick an example above).");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -86,7 +89,10 @@ export default function ThesisPage() {
         </label>
         <textarea
           value={thesis}
-          onChange={(e) => setThesis(e.target.value)}
+          onChange={(e) => {
+            setThesis(e.target.value);
+            if (error) setError(null);
+          }}
           disabled={loading}
           rows={4}
           placeholder="Describe your investment thesis in plain English…"
@@ -144,8 +150,19 @@ export default function ThesisPage() {
 
         <button
           type="submit"
-          disabled={loading || !thesis.trim()}
-          className="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+          disabled={loading}
+          title={
+            !thesis.trim()
+              ? "Enter a thesis or choose an example — the button stays clickable so you get feedback if the field is empty."
+              : undefined
+          }
+          className={`mt-5 w-full font-semibold py-3 rounded-xl transition-colors text-sm ${
+            loading
+              ? "bg-indigo-300 text-white cursor-wait"
+              : !thesis.trim()
+                ? "bg-slate-200 text-slate-500 hover:bg-slate-300"
+                : "bg-indigo-600 hover:bg-indigo-700 text-white"
+          }`}
         >
           {loading ? "Analyzing…" : "Run Analysis →"}
         </button>
