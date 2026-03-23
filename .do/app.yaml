@@ -35,6 +35,10 @@ services:
       - key: USE_MOCK
         scope: RUN_TIME
         value: "false"
+      # Force Next /api proxy to same-container FastAPI (ignore mistaken public BACKEND_URL).
+      - key: UNIFIED_CONTAINER
+        scope: RUN_TIME
+        value: "1"
       # Next server-side proxy must use loopback (see INTERNAL_FASTAPI_URL in Dockerfile / backend-origin.ts).
       - key: INTERNAL_FASTAPI_URL
         scope: RUN_TIME

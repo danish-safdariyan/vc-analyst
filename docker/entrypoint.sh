@@ -3,6 +3,7 @@ set -e
 export VC_ANALYSIS_JOBS_DIR="${VC_ANALYSIS_JOBS_DIR:-/tmp/vc-analysis-jobs}"
 mkdir -p "$VC_ANALYSIS_JOBS_DIR"
 export PATH="/venv/bin:${PATH}"
+export UNIFIED_CONTAINER="${UNIFIED_CONTAINER:-1}"
 export BACKEND_URL="${BACKEND_URL:-http://127.0.0.1:8000}"
 export INTERNAL_FASTAPI_URL="${INTERNAL_FASTAPI_URL:-http://127.0.0.1:8000}"
 

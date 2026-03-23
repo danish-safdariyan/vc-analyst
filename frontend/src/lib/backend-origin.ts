@@ -24,6 +24,11 @@ export function normalizeBackendOrigin(raw: string): string {
 }
 
 export function backendOriginFromEnv(): string {
+  // Unified image only (root Dockerfile). Checked first so DO UI env (BACKEND_URL, etc.)
+  // cannot point the server proxy at the public URL or localhost quirks break polling.
+  if (process.env["UNIFIED_CONTAINER"] === "1") {
+    return "http://127.0.0.1:8000";
+  }
   // Unified Docker / App Platform (Next + FastAPI in one container): the server-side
   // proxy must call loopback. If BACKEND_URL is set to the public app URL in the DO UI,
   // requests would go back through the load balancer and hit a *different* instance
