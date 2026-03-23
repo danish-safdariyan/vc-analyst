@@ -14,7 +14,7 @@ services:
     source_dir: /
     github:
       repo: danish-safdariyan/vc-analyst
-      branch: main
+      branch: feature/digitalocean-unified-container
       deploy_on_push: true
     dockerfile_path: Dockerfile
     # Next.js listens on PORT; default 3000 locally. DO sets PORT — keep http_port in sync.
