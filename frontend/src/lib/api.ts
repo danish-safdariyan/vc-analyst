@@ -1,12 +1,16 @@
 import type { AnalyzeResponse, ChatApiResponse, VCAnalysisResult } from "./types";
+import { normalizeBackendOrigin } from "./backend-origin";
 import { buildDemoResult } from "./demo";
 
 // All browser calls use same-origin `/api/*` so Next can rewrite to the backend
 // (see next.config.mjs). This avoids CORS on DigitalOcean and other hosts. The
 // analysis pipeline uses an async job + short polls, so we stay under proxy timeouts.
 // Set NEXT_PUBLIC_API_DIRECT=true to call the backend URL directly (local debugging).
-const DIRECT_BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 const API_DIRECT = process.env.NEXT_PUBLIC_API_DIRECT === "true";
+
+function directBackendBase(): string {
+  return normalizeBackendOrigin(process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000");
+}
 
 const BASE = "/api";
 
@@ -15,7 +19,7 @@ const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 async function post<T>(path: string, body: unknown, direct = false, timeoutMs = 300_000): Promise<T> {
   const useDirect = direct || API_DIRECT;
-  const url = useDirect ? `${DIRECT_BACKEND}/api${path}` : `${BASE}${path}`;
+  const url = useDirect ? `${directBackendBase()}/api${path}` : `${BASE}${path}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -64,7 +68,7 @@ export { DEMO_MODE };
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 async function get<T>(path: string): Promise<T> {
-  const url = API_DIRECT ? `${DIRECT_BACKEND}/api${path}` : `${BASE}${path}`;
+  const url = API_DIRECT ? `${directBackendBase()}/api${path}` : `${BASE}${path}`;
   const res = await fetch(url);
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);

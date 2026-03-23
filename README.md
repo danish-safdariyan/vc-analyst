@@ -139,12 +139,17 @@ The browser calls **same-origin** `/api/...`; the Next **App Route** `src/app/ap
 
 | Variable | Where | Purpose |
 |----------|--------|--------|
-| **`BACKEND_URL`** | **Web** service (RUN_TIME) | Full origin + route prefix, e.g. `https://your-app.ondigitalocean.app/vc-analyst-backend` — **no trailing slash**. |
+| **`BACKEND_URL`** | **Web** service (RUN_TIME) | API component base: origin + optional path prefix, e.g. `https://your-app.ondigitalocean.app/vc-analyst-backend` or `${api.PUBLIC_URL}`. **No trailing slash** and **do not** end with `/api` (the app appends `/api/...`). |
 | **`APP_URL_PREFIX`** | **API** service | Must match the component route: e.g. `/vc-analyst-backend` so `/vc-analyst-backend/api/...` is handled. Omit locally. |
+| **`GATEWAY_STRIPS_API_PREFIX`** | **API** service | `true` when DigitalOcean routes `/api` to this service **with path trimmed** (see Networking). Omit locally. |
 | **`NEXT_PUBLIC_API_URL`** | Web (optional) | Same as `BACKEND_URL` if you don’t set `BACKEND_URL`; also used if `NEXT_PUBLIC_API_DIRECT=true`. |
 | **`OPENROUTER_API_KEY`** | **API** service (SECRET) | LLM + agents. |
 
 Set **`CORS_ORIGINS`** on the API only if the browser calls the API host directly (`NEXT_PUBLIC_API_DIRECT=true`).
+
+**DigitalOcean path routing:** If **Networking** sends `/api/*` to the API component with **path trimmed**, the container sees `/start-analysis`, not `/api/start-analysis`. Set **`GATEWAY_STRIPS_API_PREFIX=true`** on the **API** service (see `backend/app/main.py`). In that setup, **`BACKEND_URL` on the web service can be the same origin** as the app (e.g. `https://your-app.ondigitalocean.app`): the edge still routes `/api/...` to FastAPI.
+
+If you **don’t** use trimmed `/api` routing, **`BACKEND_URL`** should be the API component’s own URL (e.g. `${api.PUBLIC_URL}`), not the web-only hostname, or the proxy can call the wrong service. **`NEXT_PUBLIC_*` values must be full URLs** (`https://…`); host-only strings are normalized when possible.
 
 ### Other hosts (Railway, Render, Fly, Vercel, …)
 

@@ -41,6 +41,10 @@ services:
       # - key: APP_URL_PREFIX
       #   scope: RUN_TIME
       #   value: "/vc-analyst-backend"
+      # If Networking routes /api → this service with path trimmed, enable:
+      # - key: GATEWAY_STRIPS_API_PREFIX
+      #   scope: RUN_TIME
+      #   value: "true"
 
   - name: web
     source_dir: frontend

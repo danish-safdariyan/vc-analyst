@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     # Leave empty for local dev.
     app_url_prefix: str = ""
 
+    # DigitalOcean App Platform: route /api → backend with "path trimmed" sends
+    # /start-analysis instead of /api/start-analysis. Set True so we prepend /api.
+    gateway_strips_api_prefix: bool = False
+
     # OpenRouter base URL (OpenAI-compatible)
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
