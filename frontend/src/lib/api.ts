@@ -69,7 +69,7 @@ export { DEMO_MODE };
 
 async function get<T>(path: string): Promise<T> {
   const url = API_DIRECT ? `${directBackendBase()}/api${path}` : `${BASE}${path}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`${res.status} ${path}: ${text}`);
@@ -107,12 +107,15 @@ export async function runAnalysis(thesis: string): Promise<VCAnalysisResult> {
   // ── Poll until done (each poll is a tiny GET, immune to long-request suspension) ──
   const POLL_INTERVAL_MS = 2500;
   const MAX_POLLS = 120; // 5 minutes max
+  const MAX_CONSECUTIVE_404_POLLS = 20; // ~50s grace window before giving up
+  let consecutive404Polls = 0;
   for (let i = 0; i < MAX_POLLS; i++) {
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
     try {
       const poll = await get<{ status: string; result?: VCAnalysisResult; error?: string }>(
         `/analysis/${jobId}`,
       );
+      consecutive404Polls = 0;
       if (poll.status === "done" && poll.result) {
         return poll.result;
       }
@@ -122,11 +125,20 @@ export async function runAnalysis(thesis: string): Promise<VCAnalysisResult> {
       // status === "running" — keep polling
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      // 404 = job never existed or disk/memory store was wiped before we added persistence
+      // In multi-instance environments without sticky sessions, a poll can hit a
+      // different instance that doesn't know this job_id yet. Retry for a grace
+      // window before surfacing an error.
       if (msg.startsWith("404 ")) {
-        throw new Error(
-          "This analysis job no longer exists on the server (e.g. API restarted). Run analysis again.",
+        consecutive404Polls += 1;
+        if (consecutive404Polls >= MAX_CONSECUTIVE_404_POLLS) {
+          throw new Error(
+            "This analysis job no longer exists on the server (or polling reached a different instance repeatedly). Run analysis again.",
+          );
+        }
+        console.warn(
+          `[api] poll attempt ${i + 1} returned 404 (consecutive=${consecutive404Polls}), retrying…`,
         );
+        continue;
       }
       // A single failed poll shouldn't kill everything — log and retry
       console.warn(`[api] poll attempt ${i + 1} failed, retrying…`, err);
