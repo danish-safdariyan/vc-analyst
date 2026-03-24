@@ -94,7 +94,7 @@ Each file is **valid JSON** and intended for documentation, manual UI tests, and
 | `display_name` | Human-readable label. |
 | `persona` | Intended fund/stakeholder. |
 | `use_case` | What you are demonstrating. |
-| `thesis_raw` | **Paste into the Thesis page** or send as `thesis` in `/api/parse-thesis` / `start-analysis`. |
+| `thesis_raw` | **Paste into the Thesis page** or send as `thesis` in `/api/parse-thesis` / `/api/start-analysis`. |
 | `sample_chat_prompts` | Paste into **Ask** (`/chat`) or `message` in `/api/chat`. |
 | `demo_notes.mock_mode` | Behavior when `USE_MOCK=true`. |
 | `demo_notes.live_mode` | Behavior when live keys and `USE_MOCK=false`. |
@@ -106,21 +106,39 @@ When `USE_MOCK=true`, the orchestrator returns a **single high-quality fixture**
 
 ---
 
-## 4. Environment variables (reproducibility)
+## 4. API surface (reproducibility)
+
+Core backend routes (FastAPI) mounted under `/api`:
+
+- `POST /api/start-analysis` then `GET /api/analysis/{job_id}` (async thesis workflow used by the UI)
+- `POST /api/run-analysis` (synchronous end-to-end workflow)
+- `POST /api/parse-thesis`, `POST /api/discover-startups`, `POST /api/score-startups`
+- `POST /api/generate-memo`, `POST /api/check-drift`, `POST /api/chat`
+- `POST /scrape` and `GET /health` are app-root routes (not mounted under `/api`)
+
+---
+
+## 5. Environment variables (reproducibility)
 
 | Variable | Location | Role |
 |----------|----------|------|
 | `OPENROUTER_API_KEY` | `backend/.env` | LLM calls (agents + Ask). |
 | `USE_MOCK` | `backend/.env` | `true` = fixture pipeline + chat mock responses when key missing. |
-| `CRUSTDATA_API_KEY` | `backend/.env` | Optional startup data; mock if empty. |
-| `NEXT_PUBLIC_API_URL` | `frontend/.env.local` | Browser/long-running calls to FastAPI (default `http://127.0.0.1:8000`). |
+| `CRUSTDATA_API_KEY` | `backend/.env` | Optional startup discovery source. |
+| `PRODUCTHUNT_API_KEY`, `PRODUCTHUNT_API_SECRET` | `backend/.env` | Optional Product Hunt discovery source. |
+| `APP_URL_PREFIX` | `backend/.env` | Optional reverse-proxy path prefix for API hosting. |
+| `GATEWAY_STRIPS_API_PREFIX` | `backend/.env` | `true` when ingress trims `/api` before forwarding. |
+| `CORS_ORIGINS` | `backend/.env` | Comma-separated allowed origins; mainly for direct browser-to-API mode. |
+| `VC_ANALYSIS_JOBS_DIR` | Runtime env | Persistent job-store directory for async analysis polling. |
+| `NEXT_PUBLIC_API_URL` | `frontend/.env.local` | Backend base URL used in direct mode / fallback config (default `http://127.0.0.1:8000`). |
+| `NEXT_PUBLIC_API_DIRECT` | `frontend/.env.local` | `true` = browser calls API host directly; `false` = same-origin Next proxy. |
 | `NEXT_PUBLIC_DEMO_MODE` | `frontend/.env.local` | `true` = frontend-only demo, no backend. |
 
 See root `.env.example` for a template.
 
 ---
 
-## 5. References
+## 6. References
 
 - OpenAPI UI: `http://localhost:8000/docs` (when backend is running).
 - Demonstration script: [DEMONSTRATION.md](./DEMONSTRATION.md).

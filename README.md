@@ -29,7 +29,7 @@ flowchart LR
   end
   subgraph api [FastAPI Backend]
     OR[OpenRouter LLM]
-    CD[Crustdata / mocks]
+    CD[Crustdata + Product Hunt / mocks]
     AG[Five agents + orchestrator]
   end
   UI -->|HTTP JSON| AG
@@ -39,10 +39,10 @@ flowchart LR
 
 | Layer | Stack | Role |
 |-------|--------|------|
-| **Frontend** | Next.js 14, TypeScript, Tailwind | Thesis form, results, memo, drift, **Ask** (`/chat`); rewrites `/api/*` to FastAPI (local + production). |
+| **Frontend** | Next.js 14, TypeScript, Tailwind | Thesis form, results, memo, drift, **Ask** (`/chat`); same-origin `/api/*` proxy via `src/app/api/[...path]/route.ts` (local + production). |
 | **Backend** | FastAPI, Python 3.12, Pydantic | REST API, background analysis jobs, agent orchestration. |
 | **Model access** | OpenAI-compatible client → [OpenRouter](https://openrouter.ai) | Parsing, scoring, memo, drift, chat. Default model family configured in `backend/app/config/settings.py`. |
-| **Data** | Crustdata (optional), in-app mocks | Startup discovery; safe offline demo via `USE_MOCK=true`. |
+| **Data** | Crustdata + Product Hunt (optional), in-app mocks | Startup discovery; safe offline demo via `USE_MOCK=true`. |
 
 Persistent analysis jobs (for long runs) are written under `backend/.analysis_jobs/` so `uvicorn --reload` does not lose polling state.
 
@@ -114,7 +114,7 @@ cd frontend && npm run clean && npm run dev
 
 ## Docker
 
-**Full stack (recommended):** one image runs Next.js on **`PORT`** (default 3000) and FastAPI on **127.0.0.1:8000**. Create `backend/.env` first (see `backend/.env.example`), then:
+**Full stack (recommended):** one image runs Next.js on **`PORT`** (default 3000) and FastAPI on **127.0.0.1:8000**. Create `backend/.env` first (copy values from root `.env.example`), then:
 
 ```bash
 docker compose up --build
@@ -140,6 +140,8 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_DEMO_MODE=false npm run de
 | Variable | Purpose |
 |----------|--------|
 | **`OPENROUTER_API_KEY`** (SECRET) | LLM + agents on the API process. |
+| **`CRUSTDATA_API_KEY`** | Optional startup discovery source. |
+| **`PRODUCTHUNT_API_KEY`**, **`PRODUCTHUNT_API_SECRET`** | Optional Product Hunt discovery source. |
 | **`USE_MOCK`** | `"true"` for fixture-only runs without an LLM key. |
 | **`UNIFIED_CONTAINER`** | Set to **`1`** on the unified service (see [`.do/app.yaml`](.do/app.yaml)). Makes the Next `/api` proxy always use **`http://127.0.0.1:8000`**, ignoring a mistaken **`BACKEND_URL`** (e.g. public app URL or `localhost`) that would cause **404** on job polls. |
 | **`BACKEND_URL`** | Ignored for the API proxy when **`UNIFIED_CONTAINER=1`**. Otherwise keep loopback or your separate API URL for split deploys. **Never** use your **public** app URL as **`BACKEND_URL`** in a single-container setup. |
@@ -183,7 +185,7 @@ python scripts/verify_datasets.py --base-url http://127.0.0.1:8000
 
 | Document | Contents |
 |----------|----------|
-| [docs/CODEBOOK.md](docs/CODEBOOK.md) | User, use case, variable definitions, dataset schema, env vars |
+| [docs/CODEBOOK.md](docs/CODEBOOK.md) | User, use case, variable definitions, dataset schema, API/environment variables |
 | [docs/DEMONSTRATION.md](docs/DEMONSTRATION.md) | Grader-friendly scenarios A–C + optional recording checklist |
 | [datasets/INDEX.md](datasets/INDEX.md) | Dataset catalog |
 

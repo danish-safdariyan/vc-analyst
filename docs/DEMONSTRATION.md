@@ -19,7 +19,7 @@ Follow these scenarios to show **working AI integration** and **reproducible** b
 | 5 | Open **Thesis**, paste the **`thesis_raw`** from dataset 01, click **Run Analysis →**. | Progress steps; then redirect to **Results** with ranked candidates, memo, drift. |
 | 6 | Open **Memo** and **Drift** in the nav. | Same run’s memo and drift panels populate from session. |
 
-**AI in this scenario:** With mock, the orchestrator uses a fixed analytical fixture; with `USE_MOCK=false` and a key, **thesis parsing, scoring, memo, drift, and discovery** use **OpenRouter** (and optional Crustdata).
+**AI in this scenario:** With mock, the orchestrator uses a fixed analytical fixture; with `USE_MOCK=false` and a key, **thesis parsing, scoring, memo, drift, and discovery** use **OpenRouter** (plus optional Crustdata/Product Hunt discovery sources).
 
 ---
 
